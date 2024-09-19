@@ -18,10 +18,18 @@ from django.conf import settings
 from django.urls import path, include
 from django.conf.urls.static import static
 from rest_framework.routers import DefaultRouter
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+)
+from user import views as user_views
 
 router = DefaultRouter()
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('signup/', user_views.SignupViewSet.as_view(), name='signup'),
     path("", include(router.urls)),
+    path('auth/', TokenObtainPairView.as_view(), name='token_obtain_pair'),  # Get JWT token
+    path('auth/refresh/', TokenRefreshView.as_view(), name='token_refresh'), # Refresh JWT token
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
