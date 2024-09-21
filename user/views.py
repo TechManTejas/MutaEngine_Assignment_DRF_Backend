@@ -148,7 +148,7 @@ def google_complete(request):
 def password_reset_link(request):
     email = request.data.get('email')
     try:
-        user = User.objects.get(email=email)
+        user = User.objects.get(username=email)
     except User.DoesNotExist:
         return Response({"error": "User with this email does not exist."}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -184,7 +184,10 @@ def reset_password(request, uidb64, token):
         return Response({"error": "Invalid or expired token."}, status=status.HTTP_400_BAD_REQUEST)
 
     # Set the new password for the user
-    user.set_password(new_password)
-    user.save()
+    try:
+        user.set_password(new_password)
+        user.save()
+    except Exception as e:
+        return Response({"error": f"Failed to save new password: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
 
     return Response({"message": "Password has been reset successfully."}, status=status.HTTP_200_OK)

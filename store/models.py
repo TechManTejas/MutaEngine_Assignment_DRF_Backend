@@ -4,23 +4,23 @@ from django.contrib.auth.models import User
 from utils.render_pdf_from_template import render_pdf_from_template
 from utils.send_email import send_email
 
-class ProductImage(models.Model):
-    image = models.ImageField(upload_to='products/images/')
-
-    def __str__(self):
-        return f"Image {self.id} for product"
-    
-
 class Product(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField()
     detailed_description = models.TextField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
     cover_image = models.ImageField(upload_to='products/covers/')
-    images = models.ManyToManyField(ProductImage, related_name='products')
 
     def __str__(self):
         return self.name
+
+
+class ProductImage(models.Model):
+    product = models.ForeignKey(Product, related_name='images', on_delete=models.CASCADE)
+    image = models.ImageField(upload_to='products/images/')
+
+    def __str__(self):
+        return f"Image {self.id} for {self.product.name}"
 
 
 class UserProduct(models.Model):

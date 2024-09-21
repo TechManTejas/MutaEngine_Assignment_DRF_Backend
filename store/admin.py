@@ -16,7 +16,6 @@ class ProductAdmin(admin.ModelAdmin):
     list_display = ("name", "price", "cover_image")
     search_fields = ("name",)
     list_filter = ("price",)
-    filter_horizontal = ("images",)
 
 
 # Admin for UserProduct
