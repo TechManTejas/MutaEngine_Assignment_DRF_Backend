@@ -9,17 +9,19 @@ from rest_framework.permissions import AllowAny
 from rest_framework.generics import CreateAPIView
 from rest_framework.decorators import api_view, permission_classes
 from google.oauth2 import id_token
-from google.auth.transport import requests
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from utils.send_email import send_email
 from .serializers import UserSerializer
+import requests
 import os
 
 # Token generator for password reset
 token_generator = PasswordResetTokenGenerator()
 
 class CustomTokenObtainPairView(TokenObtainPairView):
+    permission_classes = [AllowAny]
+
     def post(self, request, *args, **kwargs):
         response = super().post(request, *args, **kwargs)
         user = self.get_user(request.data["username"])

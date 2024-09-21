@@ -34,6 +34,7 @@ urlpatterns = [
     path("", include(router.urls)),
     path('auth/', user_views.CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),  # Get JWT token
     path('auth/refresh/', user_views.CustomTokenRefreshView.as_view(), name='token_refresh'), # Refresh JWT token
+    path('google-complete/', user_views.google_complete, name='google_complete'),  # Add this line
     path('password-reset-link/', user_views.password_reset_link, name='password_reset_link'),
     path('reset-password/<uidb64>/<token>/', user_views.reset_password, name='reset_password'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
