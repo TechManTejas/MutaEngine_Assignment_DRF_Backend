@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from rest_framework.generics import CreateAPIView
 from rest_framework.decorators import api_view, permission_classes
+from google.auth.transport.requests import Request
 from google.oauth2 import id_token
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
@@ -107,7 +108,7 @@ def google_complete(request):
         return Response({"error": "Token is missing"}, status=400)
 
     try:
-        idinfo = id_token.verify_oauth2_token(token, requests.Request(), client_id)
+        idinfo = id_token.verify_oauth2_token(token, Request(), client_id)
 
         email = idinfo["email"]
         first_name = idinfo.get("given_name", "")
