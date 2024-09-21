@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     "corsheaders",
 
     "payment",
+    "store",
     "user",
 ]
 
@@ -62,7 +63,10 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 
-    "corsheaders.middleware.CorsMiddleware"
+    "corsheaders.middleware.CorsMiddleware",
+    "middleware.logging.RequestLoggingMiddleware", # Logging Middleware
+    "middleware.api_usage_tracking.APIUsageTrackingMiddleware",  # API Usage Tracking Middleware
+    "middleware.performance_tracking.PerformanceTrackingMiddleware", # Performace Tracking Middleware
 ]
 
 CORS_ORIGIN_ALLOW_ALL = True

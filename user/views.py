@@ -1,14 +1,58 @@
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.contrib.auth.models import User
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
 from django.contrib.auth import login
-from rest_framework.permissions import AllowAny
+from rest_framework import status
 from rest_framework.response import Response
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
 from rest_framework.generics import CreateAPIView
+from rest_framework.decorators import api_view, permission_classes
 from google.oauth2 import id_token
 from google.auth.transport import requests
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from utils.send_email import send_email
 from .serializers import UserSerializer
 import os
+
+# Token generator for password reset
+token_generator = PasswordResetTokenGenerator()
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    def post(self, request, *args, **kwargs):
+        response = super().post(request, *args, **kwargs)
+        user = self.get_user(request.data["username"])
+        user_serializer = UserSerializer(user)
+        serialized_user = user_serializer.data
+
+        return Response(
+            {
+                "refresh": response.data["refresh"],
+                "access": response.data["access"],
+                "user": serialized_user,
+            }
+        )
+
+    def get_user(self, username):
+        return User.objects.get(username=username)
+
+
+class CustomTokenRefreshView(TokenRefreshView):
+    def post(self, request, *args, **kwargs):
+        response = super().post(request, *args, **kwargs)
+
+        # Decode the refresh token to get the user ID
+        refresh_token = request.data.get("refresh")
+        refresh = RefreshToken(refresh_token)
+        user_id = refresh["user_id"]
+
+        # Get the user
+        user = User.objects.get(id=user_id)
+        user_serializer = UserSerializer(user)
+        serialized_user = user_serializer.data
+
+        return Response({"access": response.data["access"], "user": serialized_user})
 
 
 class SignupViewSet(CreateAPIView):
@@ -76,3 +120,50 @@ def google_complete(request):
 
     except ValueError:
         return Response({"error": "Invalid token"}, status=400)
+    
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def password_reset_link(request):
+    email = request.data.get('email')
+    try:
+        user = User.objects.get(email=email)
+    except User.DoesNotExist:
+        return Response({"error": "User with this email does not exist."}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Generate password reset token and user encoded ID
+    token = token_generator.make_token(user)
+    uid = urlsafe_base64_encode(force_bytes(user.pk))
+
+    # Construct the password reset link
+    reset_link = f"{os.getenv('FRONTEND_URL')}/reset-password/{uid}/{token}/"
+
+    # Send email with the reset link
+    subject = "Password Reset Requested"
+    message = f"Click the link below to reset your password:\n{reset_link}"
+
+    send_email(subject, message, [email])
+
+    return Response({"message": "Password reset link sent."}, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def reset_password(request, uidb64, token):
+    new_password = request.data.get('new_password')
+
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+    except (User.DoesNotExist, ValueError, TypeError, OverflowError):
+        return Response({"error": "Invalid token or user ID."}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Check if token is valid
+    if not token_generator.check_token(user, token):
+        return Response({"error": "Invalid or expired token."}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Set the new password for the user
+    user.set_password(new_password)
+    user.save()
+
+    return Response({"message": "Password has been reset successfully."}, status=status.HTTP_200_OK)
