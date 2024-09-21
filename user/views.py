@@ -62,7 +62,24 @@ class SignupViewSet(CreateAPIView):
     http_method_names = ["post"]
 
     def create(self, request):
-        serializer = UserSerializer(data=request.data)
+        recaptcha_response = request.data.get('g-recaptcha-response')
+        if not recaptcha_response:
+            return Response({"error": "reCAPTCHA token is missing."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Verify reCAPTCHA
+        recaptcha_secret = os.getenv("RECAPTCHA_SECRET_KEY")
+        recaptcha_verification_url = f"https://www.google.com/recaptcha/api/siteverify"
+        verification_response = requests.post(recaptcha_verification_url, data={
+            'secret': recaptcha_secret,
+            'response': recaptcha_response
+        })
+
+        verification_result = verification_response.json()
+        if not verification_result.get('success'):
+            return Response({"error": "Invalid reCAPTCHA. Please try again."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Proceed with user creation
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = User.objects.create_user(**serializer.validated_data)
         refresh = RefreshToken.for_user(user)
@@ -72,7 +89,8 @@ class SignupViewSet(CreateAPIView):
                 "refresh": str(refresh),
                 "access": str(refresh.access_token),
                 "user": serializer.data,
-            }
+            },
+            status=status.HTTP_201_CREATED
         )
 
 

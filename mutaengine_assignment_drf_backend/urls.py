@@ -26,6 +26,7 @@ router = DefaultRouter()
 router.register(r'products', store_views.ProductViewSet, basename='product')
 router.register(r'user-products', store_views.UserProductViewSet, basename='user-product')
 router.register(r'orders', payment_views.CreateOrderViewSet, basename='order')
+router.register(r'webhook', payment_views.PaymentWebhookViewSet, basename='webhook')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
