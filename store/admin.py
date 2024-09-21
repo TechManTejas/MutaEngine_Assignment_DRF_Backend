@@ -1,15 +1,5 @@
 from django.contrib import admin
-from .models import ProductImage, Product, UserProduct
-
-
-# Admin for ProductImage
-class ProductImageAdmin(admin.ModelAdmin):
-    list_display = (
-        "id",
-        "image",
-    )
-    search_fields = ("id",)
-
+from .models import  Product, UserProduct
 
 # Admin for Product
 class ProductAdmin(admin.ModelAdmin):
@@ -26,6 +16,5 @@ class UserProductAdmin(admin.ModelAdmin):
 
 
 # Register the models with their respective admin classes
-admin.site.register(ProductImage, ProductImageAdmin)
 admin.site.register(Product, ProductAdmin)
 admin.site.register(UserProduct, UserProductAdmin)
