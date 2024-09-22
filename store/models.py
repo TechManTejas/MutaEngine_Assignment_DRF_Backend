@@ -40,12 +40,14 @@ class UserProduct(models.Model):
             'product': self.product,
         }
 
-        pdf = render_pdf_from_template('store/email_templates/invoice.html', context)
+        pdf = render_pdf_from_template('invoice.html', context)
+
+        print(pdf)
 
         if pdf:
             # Email subject and body
             subject = f"Invoice for your purchase of {self.product.name}"
-            message = f"Dear {self.user.username},\n\nThank you for your purchase. Please find your invoice attached.\n\nBest regards,\nYour Company"
+            message = f"Dear {self.user.username},\n\nThank you for your purchase. Please find your invoice attached.\n\nBest regards,\nTejas Vaij"
 
             # Attachment for the PDF
             attachments = [
@@ -57,4 +59,4 @@ class UserProduct(models.Model):
             ]
 
             # Send email with attachment
-            send_email(subject, message, [self.user.email], attachments=attachments)
+            send_email(subject, message, [self.user.username], attachments=attachments)
