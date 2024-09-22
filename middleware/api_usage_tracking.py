@@ -13,11 +13,11 @@ class APIUsageTrackingMiddleware(MiddlewareMixin):
             if last_request_time:
                 time_diff = now - last_request_time
                 if time_diff < timedelta(minutes=1):
-                    # Example rate limit: 5 requests per minute
+                    # Example rate limit: 15 requests per minute
                     request_count = cache.get(f"api_usage_count_{user_id}", 0)
-                    if request_count >= 5:
+                    if request_count >= 15:
                         from django.http import JsonResponse
-                        return JsonResponse({"error": "Rate limit exceeded"}, status=429)
+                        return JsonResponse({"error": "Rate limit exceeded, from middleware.api_usage_tracking"}, status=429)
                     else:
                         cache.set(f"api_usage_count_{user_id}", request_count + 1, timeout=60)
                 else:
