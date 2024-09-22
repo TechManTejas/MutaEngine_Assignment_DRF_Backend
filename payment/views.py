@@ -53,7 +53,6 @@ class CreateOrderViewSet(viewsets.ViewSet):
         # Store the Razorpay order details in the database
         Order.objects.create(
             order_id=razorpay_order["id"],
-            amount=amount,
             completed=False,
             product=product,
             user=request.user,
